@@ -17,7 +17,7 @@ import pickle
 
 MAX_PAGES = 1000
 
-for page_number in range(0, MAX_PAGES,10):
+for page_number in range(0, MAX_PAGES,25):
     
     #url = "www.yelp.co.uk/search?find_\loc=Praha&start=" + str(page_number)  + "&cflt=restaurants"
     url = "www.yelp.co.uk/search?find_loc=Praha&start=" + str(page_number)
@@ -57,6 +57,25 @@ for page_number in range(0, MAX_PAGES,10):
     
 #%%
 
+#check for same links aka duplicates
 with open('placeLinksData.pickle', 'rb') as f:
     entry = pickle.load(f)
     loaded_place_links = entry
+    
+print (len(loaded_place_links[:1000]))
+
+len(set(loaded_place_links[:1000]))
+
+#%%
+#duplicates
+
+#locate index of the item
+for index,item in enumerate(loaded_place_links):
+    if item == '/biz/alcron-restaurant-praha':
+        print (index)
+        
+#%%
+
+#print the same values if found
+set([x for x in loaded_place_links[:200] if loaded_place_links[:200].count(x) > 1])
+    
