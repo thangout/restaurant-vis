@@ -10,7 +10,50 @@ import pickle
 #load raw text repsonse
 with open('placeData.pickle', 'rb') as f:
     place_data = pickle.load(f)
+    
+#%%
 
+# PARSE methods
+
+def getOpenHours(place):
+    
+    #some place might not have openhours so return empty object
+    try:
+        openHoursTpl = place.find('table','hours-table').find_all('tr')
+    except:
+        return {}
+    
+    openHours = {}
+    
+    for item in openHoursTpl:
+        openHourRow = item.findChildren()
+        
+        dayAbbrKey = openHourRow[0].text
+        openHourRange = openHourRow[1].text.strip().split('-')
+        
+        if(len(openHourRange) == 1):
+            openHours[dayAbbrKey] = 'Closed'
+        else:
+            openFr = openHourRange[0]
+            openTo = openHourRange[1]
+            openHours[dayAbbrKey] = [openFr,openTo]
+            
+    return openHours
+
+def getGPS(place):
+     #location
+    coordTmp = place.find('a','biz-map-directions').findChildren()[0].attrs['src']
+    coordStart = coordTmp.find('center')
+    
+    #some of the links of the map are corrupted so in that case just return empty gps
+    if(coordStart < 0):
+        return [0,0]
+    
+    coordTmpShort = coordTmp[coordStart+7:coordStart+28]
+    gps = coordTmpShort.split('%2C')    
+    gps = list(map(float,gps)) #convert to float
+    
+    return gps
 #%%
 
 #algorithm that scrapes the data form the page
@@ -40,6 +83,7 @@ dataStorage = []
 
 for i in range(0,len(place_data)):
     #loop through the downloaded pages and scrape the information
+
     
     place = BeautifulSoup(place_data[i],'lxml')
     
@@ -78,11 +122,7 @@ for i in range(0,len(place_data)):
     priceGroup = place.find('span','price-range').text
     
     #location
-    coordTmp = place.find('a','biz-map-directions').findChildren()[0].attrs['src']
-    coordStart = coordTmp.find('center')
-    coordTmpShort = coordTmp[coordStart+7:coordStart+28]
-    gps = coordTmpShort.split('%2C')
-    gps = list(map(float,gps)) #convert to float
+    gps = getGPS(place)
     
     #stars
     stars = float(place.find('div','rating-very-large').attrs['title'][0:3])
@@ -114,6 +154,8 @@ for i in range(0,len(place_data)):
     for item in tagsTmp:
         tags.append(item.text)
     
+    openHours = getOpenHours(place)
+    
     #extra info, like wifi, takeaway, reservation etc..
     extrasTmp = place.find('div','short-def-list').findChildren('dl')
     extras = {}
@@ -125,22 +167,7 @@ for i in range(0,len(place_data)):
         extras[key] = val
       
     
-    openHoursTpl = place.find('table','hours-table').find_all('tr')
     
-    openHours = {}
-    
-    for item in openHoursTpl:
-        openHourRow = item.findChildren()
-        
-        dayAbbrKey = openHourRow[0].text
-        openHourRange = openHourRow[1].text.strip().split('-')
-        
-        if(len(openHourRange) == 1):
-            openHours[dayAbbrKey] = 'Closed'
-        else:
-            openFr = openHourRange[0]
-            openTo = openHourRange[1]
-            openHours[dayAbbrKey] = [openFr,openTo]
             
     storeNode = {
      'name': name,
@@ -167,4 +194,8 @@ for i in range(0,len(place_data)):
 #%%
     
 with open('jsonPlaceData.txt', 'w') as outfile:
-    json.dump(dataStorage, outfile)    
+    json.dump(dataStorage, outfile)  
+    
+#%%
+
+data

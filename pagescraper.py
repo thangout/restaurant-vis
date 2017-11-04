@@ -35,7 +35,7 @@ for place_link in place_links[:200]:
     print ("visiting" + str(counter))
     time.sleep(5)
 
-#%%
+    #%%
 
 with open("placeData.pickle", "wb") as text_file:
     pickle.dump(raw_place_pages, text_file)
